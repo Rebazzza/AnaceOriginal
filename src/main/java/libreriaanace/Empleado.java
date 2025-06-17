@@ -9,8 +9,25 @@ public class Empleado extends Persona{
     private String contraseña;
     private String rol;
     private String correo;
+    private int codigo;
+
+    public int getCodigo() {
+        return codigo;
+    }
+
+    public void setCodigo(int codigo) {
+        this.codigo = codigo;
+    }
 
     public Empleado() {
+    }
+
+    public Empleado(int codigo,String nombre,String telefono,   String dni,String contraseña, String rol, String correo) {
+        super(nombre, telefono, dni);
+        this.contraseña = contraseña;
+        this.rol = rol;
+        this.correo = correo;
+        this.codigo = codigo;
     }
 
     public Empleado(String nombre, String telefono, String dni,String contraseña, String rol, String correo) {

@@ -67,6 +67,7 @@ public class PersonaController {
 
     public DefaultTableModel obtenerEmpleados() {
         DefaultTableModel modelo = new DefaultTableModel();
+        modelo.addColumn("Codigo");
         modelo.addColumn("Nombre");
         modelo.addColumn("Teléfono");
         modelo.addColumn("DNI");
@@ -82,12 +83,13 @@ public class PersonaController {
             ResultSet rs = st.executeQuery(consulta);
 
             while (rs.next()) {
-                Object[] fila = new Object[5];
-                fila[0] = rs.getString("NOMBRE");
-                fila[1] = rs.getString("TELEFONO");
-                fila[2] = rs.getString("DNI");
-                fila[3] = rs.getString("ROL");
-                fila[4] = rs.getString("CORREO");
+                Object[] fila = new Object[6];
+                fila[0] = rs.getString("CODIGO");
+                fila[1] = rs.getString("NOMBRE");
+                fila[2] = rs.getString("TELEFONO");
+                fila[3] = rs.getString("DNI");
+                fila[4] = rs.getString("ROL");
+                fila[5] = rs.getString("CORREO");
                 modelo.addRow(fila);
             }
 
@@ -314,7 +316,36 @@ public class PersonaController {
 
         return existe;
     }
+public Empleado obtenerEmpleadoPorCodigo(String codigoBuscado) {
+        String sql = "SELECT * FROM EMPLEADO WHERE CODIGO = ?";
+        Empleado empleado = null;
 
+        try (Connection conn = new Cconexion().establecerConexion();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, codigoBuscado);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                empleado = new Empleado(
+                    rs.getInt("CODIGO"),
+                    rs.getString("NOMBRE"),
+                    rs.getString("TELEFONO"),
+                    rs.getString("DNI"),
+                    rs.getString("CONTRASEÑA"),
+                    rs.getString("ROL"),
+                    rs.getString("CORREO")
+                );
+            } else {
+                JOptionPane.showMessageDialog(null, "No se encontró el empleado con código: " + codigoBuscado);
+            }
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Error al obtener empleado: " + e.getMessage());
+        }
+
+        return empleado;
+    }
     public boolean existeEmpleadoPorDNI(String dni) {
         Cconexion objConexion = new Cconexion();
         Connection conn = objConexion.establecerConexion();
@@ -356,7 +387,26 @@ public class PersonaController {
 
         return existe;
     }
+public boolean existeEmpleadoPorC(String dni) {
+        Cconexion objConexion = new Cconexion();
+        Connection conn = objConexion.establecerConexion();
+        boolean existe = false;
 
+        String sql = "SELECT 1 FROM EMPLEADO WHERE DNI = ?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, dni);
+            ResultSet rs = ps.executeQuery();
+            existe = rs.next();
+            rs.close();
+            ps.close();
+            conn.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return existe;
+    }
     public boolean existeClientePorDNI(String dni) {
         Cconexion objConexion = new Cconexion();
         Connection conn = objConexion.establecerConexion();

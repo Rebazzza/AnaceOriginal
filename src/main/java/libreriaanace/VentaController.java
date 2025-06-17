@@ -4,6 +4,10 @@
  */
 package libreriaanace;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -11,6 +15,10 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.Date;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
 
 /**
  *
@@ -22,6 +30,160 @@ public class VentaController {
     Inventario i = new Inventario();
     private List<Venta> VentasTotales = new  ArrayList<>();
     Scanner linea = new Scanner(System.in);
+    public DefaultTableModel obtenerVentasPorEmpleado(int codigoEmpleado) {
+    DefaultTableModel modelo = new DefaultTableModel();
+    modelo.addColumn("Código Venta");
+    modelo.addColumn("Fecha");
+    modelo.addColumn("Total");
+    modelo.addColumn("Descuento");
+
+    Cconexion objConexion = new Cconexion();
+    Connection conn = objConexion.establecerConexion();
+
+    String sql = "SELECT V.CODIGO, V.FECHA, V.TOTAL, V.DESCUENTO " +
+                 "FROM VENTA V WHERE V.CODIGO_EMPLEADO = ?";
+
+    try {
+        PreparedStatement ps = conn.prepareStatement(sql);
+        ps.setInt(1, codigoEmpleado);
+        ResultSet rs = ps.executeQuery();
+
+        while (rs.next()) {
+            Object[] fila = new Object[]{
+                rs.getString("CODIGO"),
+                rs.getDate("FECHA"),
+                rs.getDouble("TOTAL"),
+                rs.getDouble("DESCUENTO")
+            };
+            modelo.addRow(fila);
+        }
+
+        rs.close();
+        ps.close();
+        conn.close();
+    } catch (SQLException e) {
+        JOptionPane.showMessageDialog(null, "Error al obtener ventas: " + e.getMessage());
+    }
+
+    return modelo;
+}
+
+public boolean registrarVenta(String codigoVenta, int codigoEmpleado, Date fecha, double descuento,
+                              JTable tablaProductos, JLabel lblTotal) {
+
+    Connection conn = null;
+    PreparedStatement psVenta = null;
+    PreparedStatement psDetalle = null;
+    PreparedStatement psActualizarStock = null;
+
+    try {
+        Cconexion conexion = new Cconexion();
+        conn = conexion.establecerConexion();
+        conn.setAutoCommit(false); // Transacción manual
+
+        // Insertar en VENTA
+        String sqlVenta = "INSERT INTO VENTA (CODIGO, CODIGO_EMPLEADO, TOTAL, FECHA, DESCUENTO) VALUES (?, ?, ?, ?, ?)";
+        psVenta = conn.prepareStatement(sqlVenta);
+
+        double totalVenta = Double.parseDouble(lblTotal.getText().replace("S/", "").trim());
+
+        psVenta.setString(1, codigoVenta);
+        psVenta.setInt(2, codigoEmpleado);
+        psVenta.setDouble(3, totalVenta);
+        psVenta.setDate(4, new java.sql.Date(fecha.getTime()));
+        psVenta.setDouble(5, descuento);
+        psVenta.executeUpdate();
+
+        
+        String sqlDetalle = "INSERT INTO DETALLEVENTAS (CODIGO, CODIGO_VENTA, CODIGO_PRODUCTO, CANTIDAD, PRECIO_UNITARIO) VALUES (?, ?, ?, ?, ?)";
+        psDetalle = conn.prepareStatement(sqlDetalle);
+
+        // Actualizar STOCK
+        String sqlActualizarStock = "UPDATE PRODUCTO SET STOCK = STOCK - ? WHERE CODIGO = ?";
+        psActualizarStock = conn.prepareStatement(sqlActualizarStock);
+
+        DefaultTableModel modelo = (DefaultTableModel) tablaProductos.getModel();
+        for (int i = 0; i < modelo.getRowCount(); i++) {
+            String codProducto = modelo.getValueAt(i, 0).toString();
+            int cantidad = Integer.parseInt(modelo.getValueAt(i, 1).toString());
+            double precioUnitario = Double.parseDouble(modelo.getValueAt(i, 3).toString());
+            String codDetalle = codigoVenta + "-D" + (i + 1);
+
+            // Insertar detalle
+            psDetalle.setString(1, codDetalle);
+            psDetalle.setString(2, codigoVenta);
+            psDetalle.setString(3, codProducto);
+            psDetalle.setInt(4, cantidad);
+            psDetalle.setDouble(5, precioUnitario);
+            psDetalle.addBatch();
+
+            // Actualizar stock
+            psActualizarStock.setInt(1, cantidad);
+            psActualizarStock.setString(2, codProducto);
+            psActualizarStock.addBatch();
+        }
+
+        psDetalle.executeBatch();
+        psActualizarStock.executeBatch();
+
+        conn.commit();
+        JOptionPane.showMessageDialog(null, "Venta registrada correctamente.");
+        return true;
+
+    } catch (Exception e) {
+        try {
+            if (conn != null) conn.rollback();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        JOptionPane.showMessageDialog(null, "Error al registrar venta: " + e.getMessage());
+        return false;
+
+    } finally {
+        try {
+            if (psVenta != null) psVenta.close();
+            if (psDetalle != null) psDetalle.close();
+            if (psActualizarStock != null) psActualizarStock.close();
+            if (conn != null) conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+    public DefaultTableModel obtenerDetallesPorVenta(String codVenta) {
+        DefaultTableModel modelo = new DefaultTableModel();
+        modelo.addColumn("Producto");
+        modelo.addColumn("Cantidad");
+        modelo.addColumn("Precio Unitario");
+        modelo.addColumn("Precio Total");
+
+        String sql = "SELECT D.CODIGO_PRODUCTO, D.CANTIDAD, D.PRECIO_UNITARIO, " +
+                     "(D.CANTIDAD * D.PRECIO_UNITARIO) AS PRECIO_TOTAL " +
+                     "FROM DETALLEVENTAS D WHERE D.CODIGO_VENTA = ?";
+
+        try (Connection conn = new Cconexion().establecerConexion();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, codVenta);
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                modelo.addRow(new Object[]{
+                    rs.getString("CODIGO_PRODUCTO"),
+                    rs.getInt("CANTIDAD"),
+                    rs.getDouble("PRECIO_UNITARIO"),
+                    rs.getDouble("PRECIO_TOTAL")
+                });
+            }
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Error al obtener detalles: " + e.getMessage());
+        }
+
+        return modelo;
+    }
     public void generarVenta(){
         do{
             Venta v = new Venta();

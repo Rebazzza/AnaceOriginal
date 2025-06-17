@@ -31,6 +31,7 @@ public class GUIAdministrador extends javax.swing.JFrame {
         initComponents();
         this.em = e;
         jLabel1.setText("BIENVENIDO/A "+ (e.getNombre()).toUpperCase());
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setLocationRelativeTo(null); 
     }
 
@@ -50,6 +51,8 @@ public class GUIAdministrador extends javax.swing.JFrame {
         jButton4 = new javax.swing.JButton();
         jButton5 = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
+        jButton6 = new javax.swing.JButton();
+        jButton7 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -95,7 +98,7 @@ public class GUIAdministrador extends javax.swing.JFrame {
                 jButton4ActionPerformed(evt);
             }
         });
-        jPanel1.add(jButton4, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 240, 180, 50));
+        jPanel1.add(jButton4, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 240, 230, 50));
 
         jButton5.setBackground(new java.awt.Color(34, 90, 146));
         jButton5.setForeground(new java.awt.Color(255, 255, 255));
@@ -111,6 +114,26 @@ public class GUIAdministrador extends javax.swing.JFrame {
         jLabel1.setForeground(new java.awt.Color(34, 90, 146));
         jLabel1.setText("LIBRERIA-ANACE");
         jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(340, 70, -1, -1));
+
+        jButton6.setBackground(new java.awt.Color(34, 90, 146));
+        jButton6.setForeground(new java.awt.Color(255, 255, 255));
+        jButton6.setText("Ver ventas por empleado");
+        jButton6.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton6ActionPerformed(evt);
+            }
+        });
+        jPanel1.add(jButton6, new org.netbeans.lib.awtextra.AbsoluteConstraints(420, 240, 230, 50));
+
+        jButton7.setBackground(new java.awt.Color(34, 90, 146));
+        jButton7.setForeground(new java.awt.Color(255, 255, 255));
+        jButton7.setText("Actualizar producto");
+        jButton7.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton7ActionPerformed(evt);
+            }
+        });
+        jPanel1.add(jButton7, new org.netbeans.lib.awtextra.AbsoluteConstraints(280, 300, 230, 50));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -151,6 +174,14 @@ public class GUIAdministrador extends javax.swing.JFrame {
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         new GUIRegistrarEmpleado().setVisible(true);
     }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
+        new GUIBuscarVendedorEmpleado().setVisible(true);
+    }//GEN-LAST:event_jButton6ActionPerformed
+
+    private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
+        new GUIActualizarProduct().setVisible(true);        // TODO add your handling code here:
+    }//GEN-LAST:event_jButton7ActionPerformed
     private JButton crearBoton(String texto) {
         JButton boton = new JButton(texto);
         boton.setFocusPainted(false);
@@ -171,6 +202,8 @@ public class GUIAdministrador extends javax.swing.JFrame {
     private javax.swing.JButton jButton3;
     private javax.swing.JButton jButton4;
     private javax.swing.JButton jButton5;
+    private javax.swing.JButton jButton6;
+    private javax.swing.JButton jButton7;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     // End of variables declaration//GEN-END:variables

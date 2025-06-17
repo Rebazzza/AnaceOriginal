@@ -10,8 +10,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
@@ -281,106 +283,177 @@ public class Inventario {
     }
 
     public DefaultTableModel buscarProductoPorNombreTabla(String nombre) {
-    DefaultTableModel modelo = new DefaultTableModel();
-    modelo.addColumn("Código");
-    modelo.addColumn("Nombre");
-    modelo.addColumn("Código Marca");
-    modelo.addColumn("Stock");
-    modelo.addColumn("Precio");
+        DefaultTableModel modelo = new DefaultTableModel();
+        modelo.addColumn("Código");
+        modelo.addColumn("Nombre");
+        modelo.addColumn("Código Marca");
+        modelo.addColumn("Stock");
+        modelo.addColumn("Precio");
 
-    Cconexion objConexion = new Cconexion();
-    Connection conn = objConexion.establecerConexion();
+        Cconexion objConexion = new Cconexion();
+        Connection conn = objConexion.establecerConexion();
 
-    String sql = "SELECT * FROM PRODUCTO WHERE NOMBRE = ?";
+        String sql = "SELECT * FROM PRODUCTO WHERE NOMBRE = ?";
 
-    try {
-        PreparedStatement ps = conn.prepareStatement(sql);
-        ps.setString(1, nombre.trim());  // Comparación exacta
-        ResultSet rs = ps.executeQuery();
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, nombre.trim());  // Comparación exacta
+            ResultSet rs = ps.executeQuery();
 
-        while (rs.next()) {
-            Object[] fila = {
-                rs.getString("CODIGO"),
-                rs.getString("NOMBRE"),
-                rs.getString("CODIGO_MARCA"),
-                rs.getInt("STOCK"),
-                rs.getDouble("PRECIO")
-            };
-            modelo.addRow(fila);
+            while (rs.next()) {
+                Object[] fila = {
+                    rs.getString("CODIGO"),
+                    rs.getString("NOMBRE"),
+                    rs.getString("CODIGO_MARCA"),
+                    rs.getInt("STOCK"),
+                    rs.getDouble("PRECIO")
+                };
+                modelo.addRow(fila);
+            }
+
+            rs.close();
+            ps.close();
+            conn.close();
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Error al buscar producto: " + e.getMessage());
         }
 
-        rs.close();
-        ps.close();
-        conn.close();
-
-    } catch (SQLException e) {
-        JOptionPane.showMessageDialog(null, "Error al buscar producto: " + e.getMessage());
+        return modelo;
     }
 
-    return modelo;
-}
-public DefaultTableModel buscarProductoPorCodigoTabla(String nombre) {
-    DefaultTableModel modelo = new DefaultTableModel();
-    modelo.addColumn("Código");
-    modelo.addColumn("Nombre");
-    modelo.addColumn("Código Marca");
-    modelo.addColumn("Stock");
-    modelo.addColumn("Precio");
+    public boolean actualizarProducto(Producto p) {
+        String sql = "UPDATE PRODUCTO SET CODIGO_MARCA = ?, NOMBRE = ?, STOCK = ?, PRECIO = ? WHERE CODIGO = ?";
 
-    Cconexion objConexion = new Cconexion();
-    Connection conn = objConexion.establecerConexion();
+        try (Connection conn = new Cconexion().establecerConexion(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
-    String sql = "SELECT * FROM PRODUCTO WHERE CODIGO = ?";
+            ps.setString(1, p.getMarca());
+            ps.setString(2, p.getNombre());
+            ps.setInt(3, p.getStock());
+            ps.setDouble(4, p.getPrecio());
+            ps.setString(5, p.getCodigo());
 
-    try {
-        PreparedStatement ps = conn.prepareStatement(sql);
-        ps.setString(1, nombre.trim());  // Comparación exacta
-        ResultSet rs = ps.executeQuery();
+            return ps.executeUpdate() > 0;
 
-        while (rs.next()) {
-            Object[] fila = {
-                rs.getString("CODIGO"),
-                rs.getString("NOMBRE"),
-                rs.getString("CODIGO_MARCA"),
-                rs.getInt("STOCK"),
-                rs.getDouble("PRECIO")
-            };
-            modelo.addRow(fila);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Error al actualizar: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public Producto obtenerProductoPorCodigo(String codigoBuscado) {
+        String sql = "SELECT * FROM PRODUCTO WHERE CODIGO = ?";
+        Producto p = null;
+
+        try (Connection conn = new Cconexion().establecerConexion(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, codigoBuscado);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                p = new Producto(
+                        rs.getString("CODIGO"),
+                        rs.getString("NOMBRE"),
+                        rs.getInt("STOCK"),
+                        rs.getDouble("PRECIO"),
+                        rs.getString("CODIGO_MARCA")
+                );
+            } else {
+                JOptionPane.showMessageDialog(null, "No se encontró el producto con código: " + codigoBuscado);
+            }
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Error al obtener empleado: " + e.getMessage());
         }
 
-        rs.close();
-        ps.close();
-        conn.close();
-
-    } catch (SQLException e) {
-        JOptionPane.showMessageDialog(null, "Error al buscar producto: " + e.getMessage());
+        return p;
     }
 
-    return modelo;
-}
-public void eliminarProductoPorNombreExacto(String nombre) {
-    Cconexion objConexion = new Cconexion();
-    Connection conn = objConexion.establecerConexion();
+    public boolean existeEmpleadoPorDNI(String dni) {
+        Cconexion objConexion = new Cconexion();
+        Connection conn = objConexion.establecerConexion();
+        boolean existe = false;
 
-    String sql = "DELETE FROM PRODUCTO WHERE CODIGO = ?";
-
-    try (PreparedStatement ps = conn.prepareStatement(sql)) {
-        ps.setString(1, nombre);
-
-        int filasAfectadas = ps.executeUpdate();
-
-        if (filasAfectadas > 0) {
-            JOptionPane.showMessageDialog(null, "Producto eliminado exitosamente.");
-        } else {
-            JOptionPane.showMessageDialog(null, "Producto no encontrado.");
+        String sql = "SELECT 1 FROM EMPLEADO WHERE DNI = ?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, dni);
+            ResultSet rs = ps.executeQuery();
+            existe = rs.next();
+            rs.close();
+            ps.close();
+            conn.close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-    } catch (SQLException e) {
-        e.printStackTrace();
-        JOptionPane.showMessageDialog(null, "Error al eliminar el producto: " + e.getMessage());
+
+        return existe;
     }
-}
-public DefaultTableModel MostrarMarcas(){
-     DefaultTableModel modelo = new DefaultTableModel();
+
+    public DefaultTableModel buscarProductoPorCodigoTabla(String nombre) {
+        DefaultTableModel modelo = new DefaultTableModel();
+        modelo.addColumn("Código");
+        modelo.addColumn("Nombre");
+        modelo.addColumn("Código Marca");
+        modelo.addColumn("Stock");
+        modelo.addColumn("Precio");
+
+        Cconexion objConexion = new Cconexion();
+        Connection conn = objConexion.establecerConexion();
+
+        String sql = "SELECT * FROM PRODUCTO WHERE CODIGO = ?";
+
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, nombre.trim());  // Comparación exacta
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                Object[] fila = {
+                    rs.getString("CODIGO"),
+                    rs.getString("NOMBRE"),
+                    rs.getString("CODIGO_MARCA"),
+                    rs.getInt("STOCK"),
+                    rs.getDouble("PRECIO")
+                };
+                modelo.addRow(fila);
+            }
+
+            rs.close();
+            ps.close();
+            conn.close();
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Error al buscar producto: " + e.getMessage());
+        }
+
+        return modelo;
+    }
+
+    public void eliminarProductoPorNombreExacto(String nombre) {
+        Cconexion objConexion = new Cconexion();
+        Connection conn = objConexion.establecerConexion();
+
+        String sql = "DELETE FROM PRODUCTO WHERE CODIGO = ?";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, nombre);
+
+            int filasAfectadas = ps.executeUpdate();
+
+            if (filasAfectadas > 0) {
+                JOptionPane.showMessageDialog(null, "Producto eliminado exitosamente.");
+            } else {
+                JOptionPane.showMessageDialog(null, "Producto no encontrado.");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Error al eliminar el producto: " + e.getMessage());
+        }
+    }
+
+    public DefaultTableModel MostrarMarcas() {
+        DefaultTableModel modelo = new DefaultTableModel();
         modelo.addColumn("Codigo");
         modelo.addColumn("Marca");
 
@@ -404,9 +477,10 @@ public DefaultTableModel MostrarMarcas(){
         }
 
         return modelo;
-}
-public DefaultTableModel MostrarProductos(){
-     DefaultTableModel modelo = new DefaultTableModel();
+    }
+
+    public DefaultTableModel MostrarProductos() {
+        DefaultTableModel modelo = new DefaultTableModel();
         modelo.addColumn("Codigo");
         modelo.addColumn("Marca");
 
@@ -432,40 +506,42 @@ public DefaultTableModel MostrarProductos(){
         }
 
         return modelo;
-}public double agregarProductoPorCodigo(String codigo, JTable tabla, int cantidad, double totalActual) {
-    Cconexion objConexion = new Cconexion();
-    Connection conn = objConexion.establecerConexion();
-    String sql = "SELECT * FROM PRODUCTO WHERE CODIGO = ?";
-
-    try {
-        PreparedStatement ps = conn.prepareStatement(sql);
-        ps.setString(1, codigo.trim());
-        ResultSet rs = ps.executeQuery();
-
-        DefaultTableModel modelo = (DefaultTableModel) tabla.getModel();  // modelo existente
-
-        if (rs.next()) {
-            String cod = rs.getString("CODIGO");
-            String nombre = rs.getString("NOMBRE");
-            double precio = rs.getDouble("PRECIO");
-
-            double subtotal = cantidad * precio;
-            totalActual += subtotal;
-
-            Object[] fila = {cod, cantidad, nombre, precio, subtotal};
-            modelo.addRow(fila);
-        } else {
-            JOptionPane.showMessageDialog(null, "No se encontró un producto con ese código.");
-        }
-
-        rs.close();
-        ps.close();
-        conn.close();
-
-    } catch (SQLException e) {
-        JOptionPane.showMessageDialog(null, "Error al buscar producto: " + e.getMessage());
     }
 
-    return totalActual;
-}
+    public double agregarProductoPorCodigo(String codigo, JTable tabla, int cantidad, double totalActual) {
+        Cconexion objConexion = new Cconexion();
+        Connection conn = objConexion.establecerConexion();
+        String sql = "SELECT * FROM PRODUCTO WHERE CODIGO = ?";
+
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, codigo.trim());
+            ResultSet rs = ps.executeQuery();
+
+            DefaultTableModel modelo = (DefaultTableModel) tabla.getModel();  // modelo existente
+
+            if (rs.next()) {
+                String cod = rs.getString("CODIGO");
+                String nombre = rs.getString("NOMBRE");
+                double precio = rs.getDouble("PRECIO");
+
+                double subtotal = cantidad * precio;
+                totalActual += subtotal;
+
+                Object[] fila = {cod, cantidad, nombre, precio, subtotal};
+                modelo.addRow(fila);
+            } else {
+                JOptionPane.showMessageDialog(null, "No se encontró un producto con ese código.");
+            }
+
+            rs.close();
+            ps.close();
+            conn.close();
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Error al buscar producto: " + e.getMessage());
+        }
+
+        return totalActual;
+    }
 }

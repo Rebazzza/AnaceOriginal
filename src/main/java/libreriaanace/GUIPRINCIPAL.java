@@ -140,6 +140,7 @@ public class GUIPRINCIPAL extends javax.swing.JFrame {
             if (rs.next()) {
                 // Datos del empleado encontrados
                 Empleado e = new Empleado(
+                    rs.getInt("CODIGO"),
                     rs.getString("NOMBRE"),
                     rs.getString("TELEFONO"),
                     rs.getString("DNI"),

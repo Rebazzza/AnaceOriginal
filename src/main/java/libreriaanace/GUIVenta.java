@@ -4,23 +4,30 @@
  */
 package libreriaanace;
 
+import com.toedter.calendar.JDateChooser;
+import java.util.Calendar;
+import java.util.Date;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-
 
 /**
  *
  * @author ma5ti
  */
-
 public class GUIVenta extends javax.swing.JFrame {
 
+    VentaController vn = new VentaController();
     Empleado em = new Empleado();
     Inventario in = new Inventario();
-    double totalVenta =0;   
+    double totalVenta = 0;
+    double descuento = 0;
+
     public GUIVenta(Empleado e) {
-        this.em = e;
+        
         initComponents();
-        this.setLocationRelativeTo(null); 
+        this.em = e;
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        this.setLocationRelativeTo(null);
     }
 
     /**
@@ -37,18 +44,20 @@ public class GUIVenta extends javax.swing.JFrame {
         jLabel1 = new javax.swing.JLabel();
         jDateChooser1 = new com.toedter.calendar.JDateChooser();
         jLabel2 = new javax.swing.JLabel();
+        jTextField1 = new javax.swing.JTextField();
+        jLabel7 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
         jPanel3 = new javax.swing.JPanel();
         jLabel4 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
-        jTextField1 = new javax.swing.JTextField();
         jSeparator2 = new javax.swing.JSeparator();
         jSeparator3 = new javax.swing.JSeparator();
         jTextField2 = new javax.swing.JTextField();
         jButton4 = new javax.swing.JButton();
-        jLabel7 = new javax.swing.JLabel();
         jButton6 = new javax.swing.JButton();
+        jTextField4 = new javax.swing.JTextField();
+        jLabel8 = new javax.swing.JLabel();
         jSeparator1 = new javax.swing.JSeparator();
         jPanel4 = new javax.swing.JPanel();
         jLabel6 = new javax.swing.JLabel();
@@ -78,6 +87,13 @@ public class GUIVenta extends javax.swing.JFrame {
         jLabel2.setText("GENERAR-VENTA");
         jPanel2.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(332, 25, -1, -1));
 
+        jTextField1.setBorder(null);
+        jPanel2.add(jTextField1, new org.netbeans.lib.awtextra.AbsoluteConstraints(70, 30, 130, 23));
+
+        jLabel7.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel7.setText("Cod.Venta: ");
+        jPanel2.add(jLabel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 30, 70, 20));
+
         jPanel1.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, 777, 80));
 
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
@@ -104,9 +120,6 @@ public class GUIVenta extends javax.swing.JFrame {
         jLabel3.setText("BUSCAR PRODUCTO");
         jPanel3.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, -1, -1));
 
-        jTextField1.setBorder(null);
-        jPanel3.add(jTextField1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 60, 130, 23));
-
         jSeparator2.setBackground(new java.awt.Color(255, 255, 255));
         jPanel3.add(jSeparator2, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 80, 130, 10));
 
@@ -126,10 +139,6 @@ public class GUIVenta extends javax.swing.JFrame {
         });
         jPanel3.add(jButton4, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 190, 130, 20));
 
-        jLabel7.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel7.setText("Codigo:");
-        jPanel3.add(jLabel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 40, 50, -1));
-
         jButton6.setBackground(new java.awt.Color(255, 255, 255));
         jButton6.setForeground(new java.awt.Color(34, 90, 146));
         jButton6.setText("Buscar");
@@ -139,6 +148,13 @@ public class GUIVenta extends javax.swing.JFrame {
             }
         });
         jPanel3.add(jButton6, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 90, 130, 20));
+
+        jTextField4.setBorder(null);
+        jPanel3.add(jTextField4, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 60, 130, 23));
+
+        jLabel8.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel8.setText("Codigo:");
+        jPanel3.add(jLabel8, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 40, 50, -1));
 
         jPanel1.add(jPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(640, 95, 150, 242));
 
@@ -210,39 +226,70 @@ public class GUIVenta extends javax.swing.JFrame {
         cantidad = Integer.parseInt(jTextField2.getText().trim());
         // Llamada al método cuando presionas el botón agregar
         
-        totalVenta = in.agregarProductoPorCodigo(jTextField1.getText().trim(), jTable1, cantidad, totalVenta);
-        jLabel9.setText(String.format("S/. %.2f", totalVenta));
+        totalVenta = in.agregarProductoPorCodigo(jTextField4.getText().trim(), jTable1, cantidad, totalVenta);
+        jLabel9.setText(String.format("%.2f", totalVenta));
             
 // Mostrar en JLabel
-        jLabel9.setText(String.format("S/. %.2f", totalVenta));
+        jLabel9.setText(String.format("%.2f", totalVenta));
         
     } catch (NumberFormatException ex) {
         JOptionPane.showMessageDialog(null, "Cantidad inválida.");
     }
+
     }//GEN-LAST:event_jButton4ActionPerformed
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
-        // TODO add your handling code here:
+        if (!validarFecha(jDateChooser1)) {
+            return; // Detiene el proceso si la fecha es inválida
+        }
+        vn.registrarVenta(jTextField1.getText().trim(), em.getCodigo(), jDateChooser1.getDate(), descuento, jTable1, jLabel9);
     }//GEN-LAST:event_jButton5ActionPerformed
 
     private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
-        if(in.existeProducto(jTextField1.getText().trim())){
+        if (in.existeProducto(jTextField4.getText().trim())) {
             in.mostrarInfo("Producto encontrado");
-        }else{
+        } else {
             in.mostrarError("Producto no existente");
         }
     }//GEN-LAST:event_jButton6ActionPerformed
 
     private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
-        if(jTextField3.getText().isEmpty()){
-            
-        }else{
-            totalVenta = totalVenta-(totalVenta*Double.parseDouble(jTextField3.getText()));
+        if (jTextField3.getText().isEmpty()) {
+
+        } else {
+            this.descuento = Double.parseDouble(jTextField3.getText());
+            totalVenta = totalVenta - (totalVenta * Double.parseDouble(jTextField3.getText()));
             jLabel9.setText(String.format("S/. %.2f", totalVenta));
         }
     }//GEN-LAST:event_jButton7ActionPerformed
 
-    
+    public boolean validarFecha(JDateChooser jdc) {
+        Date fechaSeleccionada = jdc.getDate();
+        if (fechaSeleccionada == null) {
+            JOptionPane.showMessageDialog(null, "Debes seleccionar una fecha.");
+            return false;
+        }
+
+        Date hoy = new Date();
+
+        // Crear objeto calendario para restar 4 días
+        Calendar limite = Calendar.getInstance();
+        limite.setTime(hoy);
+        limite.add(Calendar.DAY_OF_YEAR, -4); // hace 4 días
+
+        // Validación
+        if (fechaSeleccionada.after(hoy)) {
+            JOptionPane.showMessageDialog(null, "La fecha no puede ser futura.");
+            return false;
+        }
+
+        if (fechaSeleccionada.before(limite.getTime())) {
+            JOptionPane.showMessageDialog(null, "La fecha no puede ser anterior a hace 4 días.");
+            return false;
+        }
+
+        return true;
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton4;
@@ -257,6 +304,7 @@ public class GUIVenta extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
@@ -271,5 +319,6 @@ public class GUIVenta extends javax.swing.JFrame {
     private javax.swing.JTextField jTextField1;
     private javax.swing.JTextField jTextField2;
     private javax.swing.JTextField jTextField3;
+    private javax.swing.JTextField jTextField4;
     // End of variables declaration//GEN-END:variables
 }
